@@ -1,6 +1,7 @@
 #include <stdio.h>
 #include <stdbool.h>
 #include <math.h>
+#include "functions.h"
 
 typedef struct {
     double l, r;
@@ -113,6 +114,9 @@ void test() {
     double i23 = integral(ft1, p2, p3, 0.001);
     double i34 = integral(ft1, p3, p4, 0.001);
     printf("%.4f %.4f %.4f\n", i12, i23, i34);
+
+    printf("%.4f %.4f %.4f %.4f %.4f %.4f\n",
+           f1(1), f1d(1), f2(1), f2d(1), f3(1), f3d(1));
 }
 
 int main(int argc, char* argv[]) {
