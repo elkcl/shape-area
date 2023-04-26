@@ -1,13 +1,15 @@
 #ifndef SHAPE_AREA_FUNCTIONS_H
 #define SHAPE_AREA_FUNCTIONS_H
 
-double f1(double x);
-double f1d(double x);
+typedef long double ld;
 
-double f2(double x);
-double f2d(double x);
+ld f1(ld x);
+ld f1d(ld x);
 
-double f3(double x);
-double f3d(double x);
+ld f2(ld x);
+ld f2d(ld x);
+
+ld f3(ld x);
+ld f3d(ld x);
 
 #endif //SHAPE_AREA_FUNCTIONS_H
