@@ -15,6 +15,8 @@ typedef struct {
     int cnt;
 } root_ans;
 
+
+// Метод хорд
 segment iter_secant(ld (*f)(ld), ld (*fd)(ld), 
                     ld (*g)(ld), ld (*gd)(ld), 
                     ld a, ld b) {
@@ -36,6 +38,7 @@ segment iter_secant(ld (*f)(ld), ld (*fd)(ld),
     #undef F
 }
 
+// Метод касательных
 segment iter_newton(ld (*f)(ld), ld (*fd)(ld), 
                     ld (*g)(ld), ld (*gd)(ld), 
                     ld a, ld b) {
@@ -56,6 +59,7 @@ segment iter_newton(ld (*f)(ld), ld (*fd)(ld),
     #undef F
 }
 
+// Комбинированный метод
 root_ans root(ld (*f)(ld), ld (*fd)(ld),
               ld (*g)(ld), ld (*gd)(ld),
               ld a, ld b, ld eps) {
@@ -75,12 +79,14 @@ root_ans root(ld (*f)(ld), ld (*fd)(ld),
     return (root_ans){a, cnt};
 }
 
+// Численное интегрирование методом Симпсона
 ld integral(ld (*f)(ld), ld a, ld b, ld eps) {
     int n = 2;
     ld h = (b - a) / n;
     ld curr = h/3 * (f(a) + 4*f((a+b)/2) + f(b));
     ld diff = h/3 * f((a+b)/2);
-    const ld p = 15e-1;
+    // Коэффициент в правиле Рунге
+    const ld p = 1.0/15;
     while (true) {
         ld curr2 = curr;
         curr2 -= 2*diff;
@@ -101,22 +107,29 @@ ld integral(ld (*f)(ld), ld a, ld b, ld eps) {
     return curr;
 }
 
+// Тестовая функция
 ld ft1(ld x) {
     return 40 * pow(x, 4) - 820 * pow(x, 3) + 5280 * pow(x, 2) - 11500 * x + 7000;
 }
 
+// Производная тестовой функции
 ld ft1d(ld x) {
     return 160 * pow(x, 3) - 2460 * pow(x, 2) + 10560 * x - 11500;
 }
 
+/*
 ld ft1i(ld x) {
     return 8*pow(x, 5) - 205*pow(x, 4) + 1760*pow(x, 3) - 5750*pow(x, 2) + 7000*x;
 }
+*/
 
+// Прямая y=0
 ld ft2(ld x) {
     return 0;
 }
 
+
+// Тестирование root и integral
 void test() {
     puts("Testing...");
     puts("Roots of the test function:");
@@ -176,6 +189,7 @@ int main(int argc, char* argv[]) {
     root_ans p23 = root(f2, f2d, f3, f3d, L23, R23, EPS1);
     root_ans p31 = root(f3, f3d, f1, f1d, L31, R31, EPS1);
 
+    // Обработка ключей
     for (int i = 0; i < argc; ++i) {
         if (strcmp(argv[i], "--help") == 0) {
             puts(HELP);
