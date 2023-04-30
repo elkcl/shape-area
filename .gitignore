@@ -52,3 +52,6 @@ Mkfile.old
 dkms.conf
 
 build/
+latex/
+!latex/shape-area-report.tex
+.idea/
