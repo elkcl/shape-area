@@ -51,7 +51,7 @@ Module.symvers
 Mkfile.old
 dkms.conf
 
-build/
-latex/
-!latex/shape-area-report.tex
-.idea/
+/build/
+/latex/*
+!/latex/shape-area-report.tex
+/.idea/
