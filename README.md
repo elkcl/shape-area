@@ -23,6 +23,12 @@ Usage:
     --roots: print the intersection points
     --iters: print the number of iterations performed
     --test-root: test the root function with the parameters given in the format "--test-root <func1_id> <func2_id> <from> <to> <eps>"
-    --test-integral: test the integral function with the parameters given in the format "--test-integral <func_id> <from> <to> <eps>"
+    --test-integral: test the integral function with the parameters given in the format "--test-integral <func1_id> <func2_id> <from> <to> <eps>"
     --full-test: perform a full test as in the report
 ```
+
+## Сборка
+
+Программа собирается с помощью утилиты `make`. Помимо `all` поддерживаются
+также цели `clean` (полная очистка собранных файлов) и `test` (полное 
+тестирование программы).

@@ -16,7 +16,7 @@ $(BUILD_DIR):
 main.c: functions.h
 
 $(BUILD_DIR)/main.o: main.c | $(BUILD_DIR)
-	gcc -c -Wall -m32 -fno-pie -o $@ $<
+	gcc -c -Wall -O2 --std=gnu99 -m32 -fno-pie -o $@ $<
 
 $(BUILD_DIR)/functions.o: functions.asm | $(BUILD_DIR)
 	nasm -f elf32 -DUNIX -o $@ $<

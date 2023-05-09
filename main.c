@@ -20,14 +20,14 @@ typedef struct {
     int cnt;
 } root_ans;
 
-// Функция, её производная и максмиальное приращение при маленьком приращении аргумента (для eps1)
+// Функция, её производная и верхняя граница значения на промежутке интегрирования
 typedef struct {
     ld (*f)(ld);
     ld (*fd)(ld);
     ld maxv;
 } func_meta;
 
-// Описание теста (номер функции, промежутки поиска двух корней, точность, аналитически посчитанный ответ
+// Описание теста (номер функции, промежутки поиска двух корней, точность, аналитически посчитанный ответ)
 typedef struct {
     int func_id;
     ld l1, r1, l2, r2;
@@ -102,13 +102,15 @@ root_ans root(ld (*f)(ld), ld (*fd)(ld),
 }
 
 // Численное интегрирование методом Симпсона
-ld integral(ld (*f)(ld), ld a, ld b, ld eps) {
+ld integral(ld (*f)(ld), ld (*g)(ld), ld a, ld b, ld eps) {
+    #define F(x) (f(x) - g(x))
+
     int n = 2;
     ld h = (b - a) / n;
     ld curr = 0;
-    ld curr2 = h/3 * (f(a) + 4*f((a+b)/2) + f(b));
+    ld curr2 = h/3 * (F(a) + 4*F((a+b)/2) + F(b));
     // Сумма членов с коэфф-ми 4 в curr2, поддерживается с целью избежания пересчёта значений
-    ld diff = h/3 * f((a+b)/2);
+    ld diff = h/3 * F((a+b)/2);
     // Коэффициент 1/15 в правиле Рунге для метода Симпсона
     const ld p = 1.0/15;
     do {
@@ -119,12 +121,14 @@ ld integral(ld (*f)(ld), ld a, ld b, ld eps) {
         curr2 /= 2;
         diff = 0;
         for (int i = 1; i < n; i += 2) {
-            diff += f(a + i * h);
+            diff += F(a + i * h);
         }
         diff *= h/3;
         curr2 += 4*diff;
     } while (p * fabsl(curr2 - curr) >= eps);
     return curr2;
+
+    #undef F
 }
 
 
@@ -160,19 +164,19 @@ ld f0(ld x) {
 
 func_meta funcs[] = {
      //  f,  fd,  maxv
-        {f0, f0,  0.00001},
-        {f1, f1d, 1.0},
-        {f2, f2d, 1.0},
-        {f3, f3d, 1.0},
-        {f4, f4d, 500.0},
-        {f5, f5d, 0.5}
+        {f0, f0,  1.0},
+        {f1, f1d, 6.25},
+        {f2, f2d, 6.25},
+        {f3, f3d, 6.25},
+        {f4, f4d, 1800.0},
+        {f5, f5d, 1.0}
 };
 
 test_def tests[] = {
      //  id, l1,   r1,   l2,   r2,   eps,    ans
         {4,  0.8,  1.1,  2.3,  2.8,  0.0001, 977.0625},
         {4,  2.3,  2.8,  6.67, 7.1,  0.0001, 11345.0625},
-        {4,  6.42, 7.12, 9.91, 11.5, 0.0001, 8181.0},
+        {4,  6.42, 7.12, 9.91, 10.1, 0.0001, 8181.0},
         {5,  2.95, 3.5,  6.1,  7.2,  0.0001, 2.0}
 };
 
@@ -183,8 +187,8 @@ bool full_test(void) {
     puts("====Testing====");
     for (int i = 0; i < sizeof(tests) / sizeof(tests[0]); ++i) {
         printf("---Test %d---\n", i + 1);
-        ld eps1 = tests[i].eps / (4 * funcs[tests[i].func_id].maxv);
-        ld eps2 = tests[i].eps / 2;
+        ld eps1 = tests[i].eps / (8 * funcs[tests[i].func_id].maxv);
+        ld eps2 = tests[i].eps / 4;
 
         root_ans p1 = root(funcs[tests[i].func_id].f,
                            funcs[tests[i].func_id].fd,
@@ -195,7 +199,7 @@ bool full_test(void) {
                            f0, f0, tests[i].l2, tests[i].r2, eps1);
         printf("Root 2: %.7Lf (%d iterations performed)\n", p2.ans, p2.cnt);
 
-        ld area = fabsl(integral(funcs[tests[i].func_id].f, p1.ans, p2.ans, eps2));
+        ld area = fabsl(integral(funcs[tests[i].func_id].f, f0, p1.ans, p2.ans, eps2));
         printf("Calculated area: %.7Lf\n", area);
         printf("Expected area: %.7Lf\n", tests[i].ans);
         printf("Error: %.10Lf\n", fabsl(area - tests[i].ans));
@@ -215,8 +219,8 @@ int main(int argc, char* argv[]) {
     // Вычилсение eps1 и eps2
     const ld EPS = 0.001;
     const ld M = funcs[1].maxv;
-    const ld EPS1 = EPS / (4*M);
-    const ld EPS2 = EPS / 2;
+    const ld EPS1 = EPS / (8*M);
+    const ld EPS2 = EPS / 4;
 
     // Промежутки поиска корней
     const ld L12 = 3.0;
@@ -233,7 +237,7 @@ int main(int argc, char* argv[]) {
         "   --roots: print the intersection points\n"
         "   --iters: print the number of iterations performed\n"
         "   --test-root: test the root function with the parameters given in the format \"--test-root <func1_id> <func2_id> <from> <to> <eps>\"\n"
-        "   --test-integral: test the integral function with the parameters given in the format \"--test-integral <func_id> <from> <to> <eps>\"\n"
+        "   --test-integral: test the integral function with the parameters given in the format \"--test-integral <func1_id> <func2_id> <from> <to> <eps>\"\n"
         "   --full-test: perform a full test as in the report\n";
 
 
@@ -247,7 +251,10 @@ int main(int argc, char* argv[]) {
         if (strcmp(argv[i], "--help") == 0) {
             puts(HELP);
         } else if (strcmp(argv[i], "--roots") == 0) {
-            printf("The intersection points are: %.5Lf, %.5Lf, %.5Lf\n", p31.ans, p23.ans, p12.ans);
+            printf("The intersection points are: (%.6Lf, %.6Lf), (%.6Lf, %.6Lf), (%.6Lf, %.6Lf)\n",
+                   p31.ans, f3(p31.ans),
+                   p23.ans, f2(p23.ans),
+                   p12.ans, f1(p12.ans));
         } else if (strcmp(argv[i], "--iters") == 0) {
             printf("The iteration counts for the roots are: %d, %d, %d\n", p31.cnt, p23.cnt, p12.cnt);
         } else if (strcmp(argv[i], "--test-root") == 0) {
@@ -262,21 +269,22 @@ int main(int argc, char* argv[]) {
             ld r = strtold(argv[i + 4], NULL);
             ld eps = strtold(argv[i + 5], NULL);
             root_ans rans = root(funcs[func1_id].f, funcs[func1_id].fd, funcs[func2_id].f, funcs[func2_id].fd, l, r, eps);
-            printf("Root: %.7Lf (%d iterations performed)\n", rans.ans, rans.cnt);
+            printf("Root: (%.7Lf, %.7Lf) (%d iterations performed)\n", rans.ans, funcs[func1_id].f(rans.ans), rans.cnt);
             i += 5;
         } else if (strcmp(argv[i], "--test-integral") == 0) {
-            if (i + 4 >= argc) {
+            if (i + 5 >= argc) {
                 puts("Syntax error!");
                 puts(HELP);
                 return 1;
             }
-            int func_id = (int) strtol(argv[i + 1], NULL, 10);
-            ld l = strtold(argv[i + 2], NULL);
-            ld r = strtold(argv[i + 3], NULL);
-            ld eps = strtold(argv[i + 4], NULL);
-            ld ians = integral(funcs[func_id].f, l, r, eps);
+            int func1_id = (int) strtol(argv[i + 1], NULL, 10);
+            int func2_id = (int) strtol(argv[i + 2], NULL, 10);
+            ld l = strtold(argv[i + 3], NULL);
+            ld r = strtold(argv[i + 4], NULL);
+            ld eps = strtold(argv[i + 5], NULL);
+            ld ians = integral(funcs[func1_id].f, funcs[func2_id].f, l, r, eps);
             printf("Integral: %.7Lf\n", ians);
-            i += 4;
+            i += 5;
         } else if (strcmp(argv[i], "--full-test") == 0) {
             if (!full_test())
                 return 1;
@@ -285,8 +293,8 @@ int main(int argc, char* argv[]) {
 
     // Вычисление площади
     ld ans = 0;
-    ans += fabsl(integral(f1, p31.ans, p23.ans, EPS2) - integral(f3, p31.ans, p23.ans, EPS2));
-    ans += fabsl(integral(f1, p23.ans, p12.ans, EPS2) - integral(f2, p23.ans, p12.ans, EPS2));
+    ans += fabsl(integral(f1, f3, p31.ans, p23.ans, EPS2));
+    ans += fabsl(integral(f1, f2, p23.ans, p12.ans, EPS2));
     printf("The area between the curves is: %.5Lf\n", ans);
 
     return 0;
